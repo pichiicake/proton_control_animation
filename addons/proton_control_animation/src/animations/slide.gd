@@ -129,7 +129,6 @@ func create_tween(animation: ProtonControlAnimation, target: Control) -> Tween:
 			if (from == PositionType.OFFSET_TRANSFORM):
 				final_position = original_offset_transform_position
 			elif (from == PositionType.OFFSET_TRANSFORM_RATIO):
-				print("original_offset_transform_position_ratio ",original_offset_transform_position_ratio)
 				final_position = original_offset_transform_position_ratio
 			else:
 				final_position = original_position
