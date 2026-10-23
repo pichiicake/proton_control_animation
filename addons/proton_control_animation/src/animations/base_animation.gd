@@ -21,6 +21,9 @@ extends Resource
 
 var _cached_data: Dictionary[Control, Dictionary] = {}
 
+## Sets the value to the "from" value
+func set_initial_as_from(_target: Control) -> void:
+	pass
 
 ## Override in child classes
 ## Handles starting the animation.

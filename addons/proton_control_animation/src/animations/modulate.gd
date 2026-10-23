@@ -39,6 +39,22 @@ func _validate_property(property: Dictionary) -> void:
 	_update_inspector_visibility(property, "to_color", to == ModulateType.NEW_COLOR)
 
 
+func set_initial_as_from(target: Control) -> void:
+	match from:
+		ModulateType.CURRENT_COLOR:
+			pass # Nothing to do
+		ModulateType.ORIGINAL_COLOR:
+			if self_modulate:
+				target.self_modulate = target.get_meta(ProtonControlAnimation.META_ORIGINAL_SELF_MODULATE, target.self_modulate)
+			else:
+				target.modulate = target.get_meta(ProtonControlAnimation.META_ORIGINAL_MODULATE, target.modulate)
+		ModulateType.NEW_COLOR:
+			if self_modulate:
+				target.self_modulate = from_color
+			else:
+				target.modulate = from_color
+
+
 func create_tween(animation: ProtonControlAnimation, target: Control) -> Tween:
 	var final_color: Color
 	match to:
@@ -55,19 +71,7 @@ func create_tween(animation: ProtonControlAnimation, target: Control) -> Tween:
 		ModulateType.NEW_COLOR:
 			final_color = to_color
 
-	match from:
-		ModulateType.CURRENT_COLOR:
-			pass # Nothing to do
-		ModulateType.ORIGINAL_COLOR:
-			if self_modulate:
-				target.self_modulate = target.get_meta(ProtonControlAnimation.META_ORIGINAL_SELF_MODULATE, target.self_modulate)
-			else:
-				target.modulate = target.get_meta(ProtonControlAnimation.META_ORIGINAL_MODULATE, target.modulate)
-		ModulateType.NEW_COLOR:
-			if self_modulate:
-				target.self_modulate = from_color
-			else:
-				target.modulate = from_color
+	set_initial_as_from(target)
 
 	_cache(target, "start_color", target.self_modulate if self_modulate else target.modulate)
 

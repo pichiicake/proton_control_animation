@@ -98,6 +98,8 @@ enum StopBehavior {
 	set(val):
 		delay = max(0, val)
 
+## If the animation should start at the specified "from" value despite any delay.
+@export var is_start_as_from_value: bool = false
 
 @export_category("Loop")
 
@@ -445,6 +447,11 @@ func play() -> void:
 			_restart_queued = true
 		return
 
+	if is_start_as_from_value:
+		animation.set_initial_as_from(target)
+	else:
+		animation.reset(self, target)
+
 	_started = true
 	_start_deferred.call_deferred()
 
@@ -486,7 +493,10 @@ func _start_deferred() -> void:
 			if stop_behavior == StopBehavior.IN_PLACE:
 				break
 			elif stop_behavior == StopBehavior.RESET:
-				animation.reset(self, target)
+				if is_start_as_from_value:
+					animation.set_initial_as_from(target)
+				else:
+					animation.reset(self, target)
 				break
 
 		# Return loop
@@ -496,7 +506,10 @@ func _start_deferred() -> void:
 
 			# If the return loop was interupted, reset the target if necessary
 			if _stop_flag and stop_behavior == StopBehavior.RESET:
-				animation.reset(self, target)
+				if is_start_as_from_value:
+					animation.set_initial_as_from(target)
+				else:
+					animation.reset(self, target)
 				break
 
 		if not infinite_loop:

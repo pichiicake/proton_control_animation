@@ -13,6 +13,10 @@ extends ProtonControlAnimationResource
 @export var to: float
 
 
+func set_initial_as_from(target: Control) -> void:
+	target.modulate.a = from
+
+
 func create_tween(animation: ProtonControlAnimation, target: Control) -> Tween:
 	target.modulate.a = from
 	var tween: Tween = animation.create_tween().set_ease(easing).set_trans(transition)

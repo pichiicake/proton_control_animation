@@ -60,6 +60,30 @@ func _validate_property(property: Dictionary) -> void:
 	_update_inspector_visibility(property, "rotation_in_degrees", from in keys or to in keys)
 
 
+func set_initial_as_from(target: Control) -> void:
+	var original_rotation: float = target.get_meta(ProtonControlAnimation.META_ORIGINAL_ROTATION, target.rotation)
+	match from:
+		RotationType.CURRENT_ROTATION:
+			pass # Nothing to do
+		RotationType.ORIGINAL_ROTATION:
+			target.rotation = original_rotation
+		RotationType.ABSOLUTE_ROTATION:
+			if rotation_in_degrees:
+				target.rotation = deg_to_rad(from_absolute_rotation)
+			else:
+				target.rotation = from_absolute_rotation
+		RotationType.RELATIVE_ROTATION:
+			if rotation_in_degrees:
+				target.rotation = target.rotation + deg_to_rad(from_relative_rotation)
+			else:
+				target.rotation = target.rotation + from_relative_rotation
+		RotationType.OFFSET_TRANSFORM:
+			if rotation_in_degrees:
+				target.offset_transform_rotation = deg_to_rad(from_offset_transform_rotation)
+			else:
+				target.offset_transform_rotation = from_offset_transform_rotation
+
+
 func create_tween(animation: ProtonControlAnimation, target: Control) -> Tween:
 	var property: String = &"rotation"
 	var original_rotation: float = target.get_meta(ProtonControlAnimation.META_ORIGINAL_ROTATION, target.rotation)
@@ -89,29 +113,12 @@ func create_tween(animation: ProtonControlAnimation, target: Control) -> Tween:
 				final_rotation = to_offset_transform_rotation
 
 	var start_rotation: float = target.rotation
-	# Set the initial control position
-	match from:
-		RotationType.CURRENT_ROTATION:
-			pass # Nothing to do
-		RotationType.ORIGINAL_ROTATION:
-			target.rotation = original_rotation
-		RotationType.ABSOLUTE_ROTATION:
-			if rotation_in_degrees:
-				target.rotation = deg_to_rad(from_absolute_rotation)
-			else:
-				target.rotation = from_absolute_rotation
-		RotationType.RELATIVE_ROTATION:
-			if rotation_in_degrees:
-				target.rotation = target.rotation + deg_to_rad(from_relative_rotation)
-			else:
-				target.rotation = target.rotation + from_relative_rotation
-		RotationType.OFFSET_TRANSFORM:
-			property = &"offset_transform_rotation"
-			if rotation_in_degrees:
-				target.offset_transform_rotation = deg_to_rad(from_offset_transform_rotation)
-			else:
-				target.offset_transform_rotation = from_offset_transform_rotation
-			start_rotation = target.offset_transform_rotation
+
+	set_initial_as_from(target)
+
+	if (from == RotationType.OFFSET_TRANSFORM):
+		property = &"offset_transform_rotation"
+		start_rotation = target.offset_transform_rotation
 
 	_cache(target, "start_rotation", start_rotation)
 	var tween: Tween = animation.create_tween().set_ease(easing).set_trans(transition)

@@ -105,6 +105,40 @@ func _validate_property(property: Dictionary) -> void:
 	_update_inspector_visibility(property, "to_offset_transform_ratio", to == PositionType.OFFSET_TRANSFORM_RATIO)
 
 
+func set_initial_as_from(target: Control) -> void:
+	var original_position: Vector2 = target.get_meta(ProtonControlAnimation.META_ORIGINAL_POSITION, target.position)
+
+	var original_offset_transform_position: Vector2
+	var original_offset_transform_position_ratio: Vector2
+	if from == PositionType.OFFSET_TRANSFORM || to == PositionType.OFFSET_TRANSFORM:
+		if (!target.offset_transform_enabled):
+			target.offset_transform_enabled = true
+		original_offset_transform_position = target.get_meta(ProtonControlAnimation.META_ORIGINAL_OFFSET_TRANSFORM_POSITION, target.offset_transform_position)
+	elif from == PositionType.OFFSET_TRANSFORM_RATIO || to == PositionType.OFFSET_TRANSFORM_RATIO:
+		if (!target.offset_transform_enabled):
+			target.offset_transform_enabled = true
+		original_offset_transform_position_ratio = target.get_meta(ProtonControlAnimation.META_ORIGINAL_OFFSET_TRANSFORM_POSITION_RATIO, target.offset_transform_position_ratio)
+
+	match from:
+		PositionType.CURRENT_POSITION:
+			pass # Nothing to do
+		PositionType.ORIGINAL_POSITION:
+			if (to == PositionType.OFFSET_TRANSFORM):
+				target.offset_transform_position = original_offset_transform_position
+			elif (to == PositionType.OFFSET_TRANSFORM_RATIO):
+				target.offset_transform_position_ratio = original_offset_transform_position_ratio
+			else:
+				target.position = original_position
+		PositionType.GLOBAL_POSITION:
+			target.global_position = from_global_position
+		PositionType.LOCAL_OFFSET:
+			target.position = target.position + from_local_offset
+		PositionType.OFFSET_TRANSFORM:
+			target.offset_transform_position = from_offset_transform
+		PositionType.OFFSET_TRANSFORM_RATIO:
+			target.offset_transform_position_ratio = from_offset_transform_ratio
+
+
 func create_tween(animation: ProtonControlAnimation, target: Control) -> Tween:
 	var property: String = &"position"
 	var original_position: Vector2 = target.get_meta(ProtonControlAnimation.META_ORIGINAL_POSITION, target.position)
@@ -146,31 +180,18 @@ func create_tween(animation: ProtonControlAnimation, target: Control) -> Tween:
 
 	var start_pos: Vector2 = target.position
 	var cache_name: String = &"start_pos"
-	# Set the initial control position
-	match from:
-		PositionType.CURRENT_POSITION:
-			pass # Nothing to do
-		PositionType.ORIGINAL_POSITION:
-			if (to == PositionType.OFFSET_TRANSFORM):
-				target.offset_transform_position = original_offset_transform_position
-				start_pos = target.offset_transform_position
-			elif (to == PositionType.OFFSET_TRANSFORM_RATIO):
-				target.offset_transform_position_ratio = original_offset_transform_position_ratio
-				start_pos = target.offset_transform_position_ratio
-			else:
-				target.position = original_position
-		PositionType.GLOBAL_POSITION:
-			target.global_position = from_global_position
-		PositionType.LOCAL_OFFSET:
-			target.position = target.position + from_local_offset
-		PositionType.OFFSET_TRANSFORM:
-			target.offset_transform_position = from_offset_transform
-			start_pos = target.offset_transform_position
-			property = &"offset_transform_position"
-		PositionType.OFFSET_TRANSFORM_RATIO:
-			target.offset_transform_position_ratio = from_offset_transform_ratio
-			start_pos = target.offset_transform_position_ratio
-			property = &"offset_transform_position_ratio"
+
+	set_initial_as_from(target)
+
+	if (from == PositionType.OFFSET_TRANSFORM || to == PositionType.OFFSET_TRANSFORM):
+		start_pos = target.offset_transform_position
+	elif (from == PositionType.OFFSET_TRANSFORM || to == PositionType.OFFSET_TRANSFORM):
+		start_pos = target.offset_transform_position
+	
+	if (from == PositionType.OFFSET_TRANSFORM):
+		property = &"offset_transform_position"
+	elif (from == PositionType.OFFSET_TRANSFORM_RATIO):
+		property = &"offset_transform_position_ratio"
 
 	_cache(target, 'start_pos', start_pos)
 

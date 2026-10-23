@@ -56,6 +56,18 @@ func _validate_property(property: Dictionary) -> void:
 	_update_inspector_visibility(property, "to_relative_size", to == SizeType.RELATIVE_SIZE)
 
 
+func set_initial_as_from(target: Control) -> void:
+	match from:
+		SizeType.CURRENT_SIZE:
+			pass # Nothing to do
+		SizeType.ORIGINAL_SIZE:
+			target.size = target.get_meta(ProtonControlAnimation.META_ORIGINAL_SIZE, target.size)
+		SizeType.ABSOLUTE_SIZE:
+			target.size = from_absolute_size
+		SizeType.RELATIVE_SIZE:
+			target.size = target.get_meta(ProtonControlAnimation.META_ORIGINAL_SIZE, target.size) * from_relative_size
+
+
 func create_tween(animation: ProtonControlAnimation, target: Control) -> Tween:
 	var end_size: Vector2
 	# Set the target position
@@ -69,16 +81,7 @@ func create_tween(animation: ProtonControlAnimation, target: Control) -> Tween:
 		SizeType.RELATIVE_SIZE:
 			end_size = target.get_meta(ProtonControlAnimation.META_ORIGINAL_SIZE, target.size) * to_relative_size
 
-	# Set the initial control position
-	match from:
-		SizeType.CURRENT_SIZE:
-			pass # Nothing to do
-		SizeType.ORIGINAL_SIZE:
-			target.size = target.get_meta(ProtonControlAnimation.META_ORIGINAL_SIZE, target.size)
-		SizeType.ABSOLUTE_SIZE:
-			target.size = from_absolute_size
-		SizeType.RELATIVE_SIZE:
-			target.size = target.get_meta(ProtonControlAnimation.META_ORIGINAL_SIZE, target.size) * from_relative_size
+	set_initial_as_from(target)
 
 	var start_size: Vector2 = target.size
 	var start_pos: Vector2 = target.position

@@ -83,6 +83,23 @@ func _validate_property(property: Dictionary) -> void:
 	_update_inspector_visibility(property, "to_offset_transform_scale", to == ScaleType.OFFSET_TRANSFORM)
 
 
+func set_initial_as_from(target: Control) -> void:
+	match from:
+		ScaleType.CURRENT_SCALE:
+			pass # Nothing to do
+		ScaleType.ORIGINAL_SCALE:
+			if (from == ScaleType.OFFSET_TRANSFORM):
+				target.offset_transform_scale = target.get_meta(ProtonControlAnimation.META_ORIGINAL_OFFSET_TRANSFORM_SCALE, target.offset_transform_scale)
+			else:
+				target.scale = target.get_meta(ProtonControlAnimation.META_ORIGINAL_SCALE, target.scale)
+		ScaleType.ABSOLUTE_SCALE:
+			target.scale = from_absolute_scale
+		ScaleType.RELATIVE_SCALE:
+			target.scale = target.get_meta(ProtonControlAnimation.META_ORIGINAL_SCALE, target.scale) * from_relative_scale
+		ScaleType.OFFSET_TRANSFORM:
+			target.offset_transform_scale = from_offset_transform_scale
+
+
 func create_tween(animation: ProtonControlAnimation, target: Control) -> Tween:
 	var property: String = &"scale"
 	var end_scale: Vector2
@@ -104,23 +121,11 @@ func create_tween(animation: ProtonControlAnimation, target: Control) -> Tween:
 			property = &"offset_transform_scale"
 
 	var start_scale: Vector2 = target.scale
-	# Set the initial control position
-	match from:
-		ScaleType.CURRENT_SCALE:
-			pass # Nothing to do
-		ScaleType.ORIGINAL_SCALE:
-			if (from == ScaleType.OFFSET_TRANSFORM):
-				target.offset_transform_scale = target.get_meta(ProtonControlAnimation.META_ORIGINAL_OFFSET_TRANSFORM_SCALE, target.offset_transform_scale)
-			else:
-				target.scale = target.get_meta(ProtonControlAnimation.META_ORIGINAL_SCALE, target.scale)
-		ScaleType.ABSOLUTE_SCALE:
-			target.scale = from_absolute_scale
-		ScaleType.RELATIVE_SCALE:
-			target.scale = target.get_meta(ProtonControlAnimation.META_ORIGINAL_SCALE, target.scale) * from_relative_scale
-		ScaleType.OFFSET_TRANSFORM:
-			target.offset_transform_scale = from_offset_transform_scale
-			start_scale = target.offset_transform_scale
-			property = &"offset_transform_scale"
+
+	set_initial_as_from(target)
+	if (from == ScaleType.OFFSET_TRANSFORM):
+		start_scale = target.offset_transform_scale
+		property = &"offset_transform_scale"
 
 	_cache(target, "start_scale", start_scale)
 	_cache(target, "end_scale", end_scale)
